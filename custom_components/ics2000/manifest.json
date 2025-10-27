@@ -10,5 +10,6 @@
   "iot_class": "local_polling",
   "version": "0.0.4",
   "integration_type": "entity",
-  "issue_tracker": "https://github.com/FRvanderVeen/ics2000-hass/issues"
+  "issue_tracker": "https://github.com/FRvanderVeen/ics2000-hass/issues",
+  "config_flow": true
 }
