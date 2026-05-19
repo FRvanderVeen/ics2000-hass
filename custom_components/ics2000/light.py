@@ -12,7 +12,7 @@ from ics2000_python.Core import Hub
 from ics2000_python.Devices import Device, Dimmer
 from enum import Enum
 
-from .const import CONF_SLEEP, CONF_TRIES
+from .const import CONF_SLEEP, CONF_TRIES, TRIES_DEFAULT, SLEEP_DEFAULT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import ATTR_BRIGHTNESS, PLATFORM_SCHEMA, LightEntity, ColorMode
 from homeassistant.config_entries import ConfigEntry
@@ -71,8 +71,8 @@ async def async_setup_entry(
     async_add_entities(
         _create_entities(
             hub.devices,
-            entry.data.get(CONF_TRIES, 1),
-            entry.data.get(CONF_SLEEP, 3),
+            entry.data.get(CONF_TRIES, TRIES_DEFAULT),
+            entry.data.get(CONF_SLEEP, SLEEP_DEFAULT),
         )
     )
     return True
@@ -98,8 +98,8 @@ def setup_platform(
     # Add entities
     add_entities(_create_entities(
         hub.devices,
-        config.get(CONF_TRIES, 1),
-        config.get(CONF_SLEEP, 3),
+        config.get(CONF_TRIES, TRIES_DEFAULT),
+        config.get(CONF_SLEEP, SLEEP_DEFAULT),
     ))
 
 
