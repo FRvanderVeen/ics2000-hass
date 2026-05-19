@@ -84,23 +84,9 @@ def setup_platform(
         discovery_info: DiscoveryInfoType | None = None  # noqa
 ) -> None:
     """Set up the ICS2000 Light platform (YAML)."""
-    hub = Hub(
-        config[CONF_MAC],
-        config[CONF_EMAIL],
-        config[CONF_PASSWORD]
-    )
-
-    # Verify that passed in configuration works
-    if not hub.connected:
-        _LOGGER.error("Could not connect to ICS2000 hub")
-        return
-
-    # Add entities
-    add_entities(_create_entities(
-        hub.devices,
-        config.get(CONF_TRIES, TRIES_DEFAULT),
-        config.get(CONF_SLEEP, SLEEP_DEFAULT),
-    ))
+    # This method is deprecated in favor of config entries, but we still need to support it for users who have configured the integration using YAML.
+    _LOGGER.warning("Configuring ICS2000 via YAML as 'light' is deprecated and will be removed in a future release. Either configure it as 'ics2000' in your YAML or via the UI.")
+    True
 
 
 class KlikAanKlikUitAction(Enum):
