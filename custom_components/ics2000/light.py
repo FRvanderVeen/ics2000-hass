@@ -12,9 +12,10 @@ from ics2000_python.Core import Hub
 from ics2000_python.Devices import Device, Dimmer
 from enum import Enum
 
-# Import the device class from the component that you want to support
+from .const import CONF_SLEEP, CONF_TRIES, TRIES_DEFAULT, SLEEP_DEFAULT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import ATTR_BRIGHTNESS, PLATFORM_SCHEMA, LightEntity, ColorMode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_MAC, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,10 +38,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional('tries'): cv.positive_int,
-    vol.Optional('sleep'): cv.positive_int
+    vol.Optional(CONF_TRIES): cv.positive_int,
+    vol.Optional(CONF_SLEEP): cv.positive_int
 })
 
+def _create_entities(devices, tries: int, sleep: int):
+    return [
+        KlikAanKlikUitDevice(device=device, tries=int(tries), sleep=int(sleep))
+        for device in devices
+    ]
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
+    """Set up KlikAanKlikUit (ICS2000) from a config entry."""
+    
+    def _create_hub():
+        return Hub(
+            entry.data[CONF_MAC],
+            entry.data[CONF_EMAIL],
+            entry.data[CONF_PASSWORD],
+        )
+
+    hub = await hass.async_add_executor_job(_create_hub)
+
+    if not hub.connected:
+        _LOGGER.error("Could not connect to ICS2000 hub")
+        return False
+
+    async_add_entities(
+        _create_entities(
+            hub.devices,
+            entry.data.get(CONF_TRIES, TRIES_DEFAULT),
+            entry.data.get(CONF_SLEEP, SLEEP_DEFAULT),
+        )
+    )
+    return True
 
 def setup_platform(
         hass: HomeAssistant,  # noqa
@@ -48,27 +83,10 @@ def setup_platform(
         add_entities: AddEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None  # noqa
 ) -> None:
-    """Set up the ICS2000 Light platform."""
-    # Assign configuration variables.
-    # The configuration check takes care they are present.
-    # Setup connection with devices/cloud
-    hub = Hub(
-        config[CONF_MAC],
-        config[CONF_EMAIL],
-        config[CONF_PASSWORD]
-    )
-
-    # Verify that passed in configuration works
-    if not hub.connected:
-        _LOGGER.error("Could not connect to ICS2000 hub")
-        return
-
-    # Add entities
-    add_entities(KlikAanKlikUitDevice(
-        device=device,
-        tries=int(config.get('tries', 1)),
-        sleep=int(config.get('sleep', 3))
-    ) for device in hub.devices)
+    """Set up the ICS2000 Light platform (YAML)."""
+    # This method is deprecated in favor of config entries, but we still need to support it for users who have configured the integration using YAML.
+    _LOGGER.warning("Configuring ICS2000 via YAML as 'light' is deprecated and will be removed in a future release. Either configure it as 'ics2000' in your YAML or via the UI.")
+    True
 
 
 class KlikAanKlikUitAction(Enum):

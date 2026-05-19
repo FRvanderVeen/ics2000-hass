@@ -11,6 +11,7 @@
   ],
   "iot_class": "local_polling",
   "version": "2025.11.0-2.0.5-2",
-  "integration_type": "entity",
-  "issue_tracker": "https://github.com/rdegraafwhizzkit/ics2000-hass/issues"
+  "integration_type": "device",
+  "issue_tracker": "https://github.com/rdegraafwhizzkit/ics2000-hass/issues",
+  "config_flow": true
 }
