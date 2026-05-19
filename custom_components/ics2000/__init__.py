@@ -61,6 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up KlikAanKlikUit (ICS2000) from a config entry."""
     _LOGGER.debug("Setting up KlikAanKlikUit (ICS2000) entry")
 
+    if entry.source == SOURCE_IMPORT:
+        entry._supports_reconfigure = False
+        entry.clear_state_cache()
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
