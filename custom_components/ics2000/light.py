@@ -12,9 +12,10 @@ from ics2000_python.Core import Hub
 from ics2000_python.Devices import Device, Dimmer
 from enum import Enum
 
-# Import the device class from the component that you want to support
+from .const import CONF_SLEEP, CONF_TRIES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import ATTR_BRIGHTNESS, PLATFORM_SCHEMA, LightEntity, ColorMode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_MAC, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,10 +38,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional('tries'): cv.positive_int,
-    vol.Optional('sleep'): cv.positive_int
+    vol.Optional(CONF_TRIES): cv.positive_int,
+    vol.Optional(CONF_SLEEP): cv.positive_int
 })
 
+def _create_entities(devices, tries: int, sleep: int):
+    return [
+        KlikAanKlikUitDevice(device=device, tries=int(tries), sleep=int(sleep))
+        for device in devices
+    ]
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
+    """Set up KlikAanKlikUit (ICS2000) from a config entry."""
+    hub = Hub(
+        entry.data[CONF_MAC],
+        entry.data[CONF_EMAIL],
+        entry.data[CONF_PASSWORD],
+    )
+
+    if not hub.connected:
+        _LOGGER.error("Could not connect to ICS2000 hub")
+        return False
+
+    async_add_entities(
+        _create_entities(
+            hub.devices,
+            entry.data.get(CONF_TRIES, 1),
+            entry.data.get(CONF_SLEEP, 3),
+        )
+    )
+    return True
 
 def setup_platform(
         hass: HomeAssistant,  # noqa
@@ -48,10 +79,7 @@ def setup_platform(
         add_entities: AddEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None  # noqa
 ) -> None:
-    """Set up the ICS2000 Light platform."""
-    # Assign configuration variables.
-    # The configuration check takes care they are present.
-    # Setup connection with devices/cloud
+    """Set up the ICS2000 Light platform (YAML)."""
     hub = Hub(
         config[CONF_MAC],
         config[CONF_EMAIL],
@@ -64,11 +92,11 @@ def setup_platform(
         return
 
     # Add entities
-    add_entities(KlikAanKlikUitDevice(
-        device=device,
-        tries=int(config.get('tries', 1)),
-        sleep=int(config.get('sleep', 3))
-    ) for device in hub.devices)
+    add_entities(_create_entities(
+        hub.devices,
+        config.get(CONF_TRIES, 1),
+        config.get(CONF_SLEEP, 3),
+    ))
 
 
 class KlikAanKlikUitAction(Enum):

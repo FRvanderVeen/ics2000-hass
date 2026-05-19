@@ -27,11 +27,10 @@ class ICS2000ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        if user_input is not None:
+        if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-        )
+        # Optionally validate connection here before creating entry.
+        return self.async_create_entry(title=user_input[CONF_MAC], data=user_input)
