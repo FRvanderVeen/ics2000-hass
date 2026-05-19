@@ -105,3 +105,8 @@ class ICS2000ConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors
         )
+
+    async def async_step_import(self, import_config: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML `configuration.yaml`."""
+
+        return await self.async_step_user(import_config)
