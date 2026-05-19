@@ -54,11 +54,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up KlikAanKlikUit (ICS2000) from a config entry."""
-    hub = Hub(
-        entry.data[CONF_MAC],
-        entry.data[CONF_EMAIL],
-        entry.data[CONF_PASSWORD],
-    )
+    
+    def _create_hub():
+        return Hub(
+            entry.data[CONF_MAC],
+            entry.data[CONF_EMAIL],
+            entry.data[CONF_PASSWORD],
+        )
+
+    hub = await hass.async_add_executor_job(_create_hub)
 
     if not hub.connected:
         _LOGGER.error("Could not connect to ICS2000 hub")
